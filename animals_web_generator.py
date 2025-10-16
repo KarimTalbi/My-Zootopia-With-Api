@@ -3,13 +3,16 @@ import os
 import sys
 
 # --- constants ---
-FILE = os.path.abspath("animals_data.json")
+FILE_DATA = os.path.abspath("animals_data.json")
+FILE_HTML_TEMPLATE = os.path.abspath("animals_template.html")
+FILE_HTML = os.path.abspath("animals.html")
+REPLACE_STRING = "__REPLACE_ANIMALS_INFO__"
 
 # --- Type Aliases for clarity ---
 AnimalData = list[dict[str, str | list[str] | dict[str, str]]]
 
 # --- File handling ---
-def load_data(file_path: str = FILE) -> AnimalData:
+def load_data(file_path: str = FILE_DATA) -> AnimalData:
     """Loads a JSON file and returns content if it exists"""
     if not os.path.exists(file_path):
         sys.exit(f"File: {file_path} could not be loaded. Exiting program...")
@@ -18,7 +21,27 @@ def load_data(file_path: str = FILE) -> AnimalData:
         return json.load(handle)
 
 
-def get_animal_data(animals_data: AnimalData) -> list[str]:
+def load_html(file_path: str = FILE_HTML_TEMPLATE) -> str:
+    """Loads an HTML file and returns content if it exists"""
+    if not os.path.exists(file_path):
+        sys.exit(f"File: {file_path} could not be loaded. Exiting program...")
+
+    with open(file_path, "r", encoding="UTF-8") as handle:
+        return handle.read()
+
+
+def save_html(content: str, file_path: str = FILE_HTML) -> None:
+    """Saves data to an HTML file, creates a file if it doesn't exist"""
+    with open(file_path, "w", encoding="UTF-8") as handle:
+        handle.write(content)
+
+
+def replace_data(replace_with: str, to_replace: str = REPLACE_STRING, content: str = load_html()) -> str:
+    """replaces a specified part of the content with new content"""
+    return content.replace(to_replace, replace_with)
+
+
+def get_animal_data(animals_data: AnimalData) -> str:
     """Filters AnimalData for Name, Diet, Location, Type and returns as a list"""
     animals = []
     for data in animals_data:
@@ -30,21 +53,15 @@ def get_animal_data(animals_data: AnimalData) -> list[str]:
         }
 
         animal = [f"{key}: {value}" for key, value in animal_data.items() if value]
-        animals.append(animal)
-    return animals
-
-# --- Helper Functions ---
-def print_lines(lines) -> None:
-    for sub in lines:
-        for line in sub:
-            print(line)
-        print()
+        animals.append("\n".join(animal) + "\n")
+    return "\n".join(animals)
 
 
 def main():
     animals_data = load_data()
-    animal = get_animal_data(animals_data)
-    print_lines(animal)
+    animals = get_animal_data(animals_data)
+    animal_html_new = replace_data(animals)
+    save_html(animal_html_new)
 
 
 if __name__ == "__main__":
