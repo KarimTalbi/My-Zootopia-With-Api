@@ -44,6 +44,7 @@ def replace_data(replace_with: str, to_replace: str = REPLACE_STRING, content: s
 def get_animal_data(animals_data: AnimalData) -> str:
     """Filters AnimalData for Name, Diet, Location, Type and returns as a list"""
     animals = []
+    output = ""
     for data in animals_data:
         animal_data = {
             "Name": data.get("name", None),
@@ -53,8 +54,8 @@ def get_animal_data(animals_data: AnimalData) -> str:
         }
 
         animal = [f"{key}: {value}" for key, value in animal_data.items() if value]
-        animals.append("\n".join(animal) + "\n")
-    return "\n".join(animals)
+        output += '<li class="cards__item">\n' + "<br/>\n".join(animal) + "<br/>\n</li>\n"
+    return output
 
 
 def main():
