@@ -1,0 +1,41 @@
+import os
+import sys
+
+HTML_TEMPLATE = os.path.join("web", "animals_template.html")
+HTML_DEST = os.path.join("web", "animals.html")
+REPLACE_STRING = "__REPLACE_ANIMALS_INFO__"
+ENCODER = "UTF-8"
+HtmlContent = str
+
+
+class HtmlTemplate:
+    """Loads HTML-Template File content"""
+
+    def __init__(self, file_path: str = HTML_TEMPLATE):
+        self.file_path = file_path
+
+    def load_html(self) -> HtmlContent:
+        """Returns the content of the HTML, terminates the program if the HTML doesn't exist"""
+        if not os.path.exists(self.file_path):
+            sys.exit(f"File: {self.file_path} could not be loaded. Exiting program...")  # TODO
+
+        with open(self.file_path, "r", encoding=ENCODER) as f:
+            return f.read()
+
+
+class HtmlDest:
+    """Saves data to new HTML File"""
+
+    def __init__(self, file_path: str = HTML_TEMPLATE, dest_path: str = HTML_DEST):
+        self.template = HtmlTemplate(file_path)
+        self.destination = dest_path
+
+    def save_html(self, content: HtmlContent) -> None:
+        """Saves data to an HTML file, creates a file if it doesn't exist"""
+        with open(self.destination, "w", encoding=ENCODER) as f:
+            f.write(content)
+
+    def replace_html(self, replace_by: str, to_replace: str = REPLACE_STRING):
+        template = self.template.load_html()
+        content = template.replace(to_replace, replace_by)
+        self.save_html(content)
