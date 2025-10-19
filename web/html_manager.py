@@ -39,3 +39,36 @@ class HtmlDest:
         template = self.template.load_html()
         content = template.replace(to_replace, replace_by)
         self.save_html(content)
+
+
+class HtmlFormat:
+    """Formats strings to HTML Format"""
+
+    def __init__(self):
+        self.html = {
+            "li": '<li class="cards__item">...</li>',
+            "div": '<div class="card__title">...</div>',
+            "p": '<p class="card__text">...</p>',
+            "strong": '<strong>...</strong>',
+            "br": '...<br/>'
+        }
+
+    def html_format(self, tag: str, text: str = ""):
+        if tag not in self.html:
+            return text
+        return self.html[tag].replace("...", text)
+
+    def li(self, text: str = ""):
+        return self.html_format("li", text)
+
+    def div(self, text: str = ""):
+        return self.html_format("div", text)
+
+    def p(self, text: str = ""):
+        return self.html_format("p", text)
+
+    def strong(self, text: str = ""):
+        return self.html_format("strong", text)
+
+    def br(self, text: str = ""):
+        return self.html_format("br", text)
