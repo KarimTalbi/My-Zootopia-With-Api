@@ -1,10 +1,11 @@
 import os
 import sys
+import html
 
 HTML_TEMPLATE = os.path.join("web", "animals_template.html")
 HTML_DEST = os.path.join("web", "animals.html")
 REPLACE_STRING = "__REPLACE_ANIMALS_INFO__"
-ENCODER = "UTF-8"
+ENCODER = "utf-8"
 HtmlContent = str
 
 
@@ -53,10 +54,19 @@ class HtmlFormat:
             "br": '...<br/>'
         }
 
+    # needed because the HTML file is missing <meta charset="UTF-8"> in the header
+    # Darwin's fox was bein displayed as Darwinâ€™s fox
+    @staticmethod
+    def html_escape(text: str) -> str:
+        text = html.unescape(text)
+        text = text.encode("ascii", "xmlcharrefreplace")
+        text = text.decode("ascii")
+        return text
+
     def html_format(self, tag: str, text: str = ""):
         if tag not in self.html:
-            return text
-        return self.html[tag].replace("...", text)
+            return self.html_escape(text)
+        return self.html_escape(self.html[tag].replace("...", text))
 
     def li(self, text: str = ""):
         return self.html_format("li", text)

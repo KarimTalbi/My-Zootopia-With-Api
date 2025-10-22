@@ -3,49 +3,49 @@ from web import html_manager
 
 AnimalData = list[dict[str, str | list[str] | dict[str, str]]]
 html = html_manager.HtmlFormat()
+info = json_manager.DatabaseInfo
 
 
-def animal_info(info):
+def serialization_helper(obj_data: dict[str, str]) -> str:
+    """Helper function for animal_serialization"""
     output = ""
-    for key, value in info.items():
+    for key, value in obj_data.items():
         if key != "Name" and value:
             output += f"\n{' ' * 8}{html.strong(key + ':')} {html.br(value)}"
     return output
 
 
-def get_animal_data(animals_data: AnimalData) -> str:
-    """Filters AnimalData for Name, Diet, Location, Type and returns as a list"""
-    animals = []
+def animal_serialization(animal_obj: dict[str, str]) -> str:
+    """Formats Data for a single Animal Object"""
     output = ""
-    for data in animals_data:
-        animal_data = {
-            "Name": data.get("name", None),
-            "Diet": data["characteristics"].get("diet", None),
-            "Locations": data.get("locations", [None]),
-            "Type": data["characteristics"].get("type", None)
-        }
-
-        locations = animal_data.get("Locations", None)
-        if locations:
-            animal_data["Locations"] = " and ".join(locations)
-            and_counter = animal_data["Locations"].count(" and ")
-
-            if and_counter >= 2:
-                animal_data["Locations"] = animal_data["Locations"].replace(" and ", ", ", and_counter - 1)
-
-        output += f'{html.li(
-            f'\n{" " * 4}{html.div(animal_data.get("Name"))}'
-            f'\n{" " * 4}{html.p(animal_info(animal_data) + f"\n{" " * 4}")}\n'
+    output += f'{html.li(
+            f'\n{" " * 4}{html.div(animal_obj.get("Name"))}'
+            f'\n{" " * 4}{html.p(serialization_helper(animal_obj) + f"\n{" " * 4}")}\n'
         )}\n\n'
-
     return output
 
 
-def main():
-    pass
-    animals_data = json_manager.DatabaseFile().get_data()
-    animals = get_animal_data(animals_data)
-    html_manager.HtmlDest().replace_html(animals)
+def get_animal_data() -> str:
+    """Filters AnimalData for Name, Diet, Location, Type and returns as a list"""
+    output = ""
+    for i in range(info().count):
+        animal: dict[str, str] = {
+            "Name": info(i).name,
+            "Scientific Name": info(i).scientific_name,
+            "Diet": info(i).diet,
+            "Locations": info(i).locations,
+            "Type": info(i).type,
+            "Color": info(i).color,
+            "Skin Type": info(i).skin_type,
+        }
+
+        output += animal_serialization(animal)
+    return output
+
+
+def main() -> None:
+    replace_with = get_animal_data()
+    html_manager.HtmlDest().replace_html(replace_with)
 
 
 if __name__ == "__main__":
