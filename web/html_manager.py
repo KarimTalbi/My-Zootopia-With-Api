@@ -1,75 +1,78 @@
 import os
 import sys
-from data.json_manager import DatabaseInfo
+from data.json_manager import DataInfo
 
-TEMPLATE_PATH = os.path.join("web", "animals_template.html")
-DESTINATION_PATH = os.path.join("web", "animals.html")
-REPLACE_STRING = f"{" " * 12}__REPLACE_ANIMALS_INFO__"
-ENCODER = "utf-8"
+FILE = os.path.join("web", "animals_template.html")
+DEST = os.path.join("web", "animals.html")
+ENCODE = "utf-8"
 
 
-class LoadHtml:
-    """
-    Loads HTML-Template File content
-    Parent class of HtmlDest
-    """
+class HtmlLoad:
 
-    def __init__(self, file_path: str = TEMPLATE_PATH):
-        self.file_path = file_path
+    def __init__(self, file: str = FILE, dest: str = DEST):
+        self.file = file
+        self.dest = dest
         self.template = self.load_html
 
     @property
     def load_html(self) -> str:
-        """Returns the content of the HTML, terminates the program if the HTML doesn't exist"""
-        if not os.path.exists(self.file_path):
-            sys.exit(f"File: {self.file_path} could not be loaded. Exiting program...")  # TODO
+        """Returns the content of the HTML, terminates the program if it doesn't exist"""
+        if not os.path.exists(self.file):
+            sys.exit(f"File: {self.file} could not be loaded. Exiting program...")
 
-        with open(self.file_path, "r", encoding=ENCODER) as f:
+        with open(self.file, "r", encoding=ENCODE) as f:
+            return f.read()
+
+    @property
+    def load_dest(self) -> str:
+        """Returns the content of the DEST HTML, terminates the program if it doesn't exist"""
+        if not os.path.exists(self.dest):
+            sys.exit(f"{self.dest} could not be saved")
+
+        with open(self.dest, "r", encoding=ENCODE) as f:
             return f.read()
 
 
-class SaveHtml(LoadHtml):
-    """Saves data to new HTML File"""
+class HtmlSave(HtmlLoad):
 
-    def __init__(self, file_path: str = TEMPLATE_PATH, dest_path: str = DESTINATION_PATH):
-        super().__init__(file_path)
-        self.destination = dest_path
+    def __init__(self, file: str = FILE, dest: str = DEST):
+        super().__init__(file)
+        self.dest_path = dest
 
     def save_html(self, content: str) -> None:
         """Saves data to an HTML file, creates a file if it doesn't exist"""
-        with open(self.destination, "w", encoding=ENCODER) as f:
+        with open(self.dest_path, "w", encoding=ENCODE) as f:
             f.write(content)
 
 
-class FormatHtml:
+class HtmlForm:
     """Formats strings into HTML Format"""
 
     def __init__(self, animal: dict[str, str]):
         self.animal = animal
-        self.indent = " " * 4
 
     @property
     def top(self) -> str:
         return (
-            f'{self.indent * 3}<li class="cards__item">\n'
-            f'{self.indent * 4}<div class="card__title">{self.animal["Name"]}</div>\n'
-            f'{self.indent * 4}<div class="card__text">\n'
-            f'{self.indent * 5}<ul>\n'
+            f'{" " * 12}<li class="cards__item">\n'
+            f'{" " * 16}<div class="card__title">{self.animal["Name"]}</div>\n'
+            f'{" " * 16}<div class="card__text">\n'
+            f'{" " * 20}<ul class="cards__list">\n'
         )
 
     @property
     def middle(self) -> str:
         return "".join(
-            [f'{self.indent * 6}<li><strong>{key}:</strong> {value}</li>\n'
+            [f'{" " * 24}<li><strong>{key}:</strong> {value}</li>\n'
              for key, value in self.animal.items() if key != "Name" and value]
         )
 
     @property
     def bottom(self) -> str:
         return (
-            f'{self.indent * 5}</ul>\n'
-            f'{self.indent * 4}</div>\n'
-            f'{self.indent * 3}</li>\n\n'
+            f'{" " * 20}</ul>\n'
+            f'{" " * 16}</div>\n'
+            f'{" " * 12}</li>\n\n'
         )
 
     @property
@@ -77,13 +80,13 @@ class FormatHtml:
         return self.top + self.middle + self.bottom
 
 
-class HtmlData(SaveHtml):
+class HtmlData(HtmlSave):
 
-    def __init__(self, file_path: str = TEMPLATE_PATH, dest_path: str = DESTINATION_PATH, to_replace: str = REPLACE_STRING):
-        super().__init__(file_path, dest_path)
-        self.form = FormatHtml
-        self.info = DatabaseInfo
-        self.to_replace = to_replace
+    def __init__(self, file: str = FILE, dest: str = DEST, skin: str = ""):
+        super().__init__(file, dest)
+        self.form = HtmlForm
+        self.info = DataInfo
+        self.skin = skin
 
     @property
     def animal_data(self) -> str:
@@ -100,16 +103,32 @@ class HtmlData(SaveHtml):
                 "Skin Type": self.info(i).skin_type,
             }
 
-            output += self.form(animal).serialize
+            if animal.get("Skin Type") == self.skin or not self.skin:
+                output += self.form(animal).serialize
         return output
 
     @property
+    def list_style(self) -> str:
+        return self.template.replace("</style>", '''
+        .cards__list {
+          list-style-type: disc;
+          list-style-position: inside;
+          margin: 0;
+          padding: 20px 0 0 0;
+        }
+        </style>''')
+
+    @property
     def encoding(self) -> str:
-        return self.template.replace('<head>', f'<head>\n{" " * 8}<meta charset="UTF-8">')
+        return self.list_style.replace('<head>', '''<head>
+        <meta charset="UTF-8">''')
 
     @property
     def replacer(self) -> str:
-        return self.encoding.replace(self.to_replace, self.animal_data)
+        return self.encoding.replace(f"{" " * 12}__REPLACE_ANIMALS_INFO__", self.animal_data)
 
-    def web_generator(self) -> None:
-        self.save_html(self.replacer)
+    @property
+    def web_generator(self) -> bool:
+        new_html = self.replacer
+        self.save_html(new_html)
+        return new_html == self.load_dest
