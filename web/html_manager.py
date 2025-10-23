@@ -196,7 +196,7 @@ class HtmlData(HtmlSave):
                 "Skin Type": self.info(i).skin_type,
             }
 
-            # If skin type matches filter OR no filter is set (self.skin is empty)
+            # If the skin type matches filter OR no filter is set (self.skin is empty)
             if animal.get("Skin Type") == self.skin or not self.skin:
                 output += self.form(animal).serialize
         return output
@@ -221,10 +221,10 @@ class HtmlData(HtmlSave):
     @property
     def encoding(self) -> str:
         """
-        Inserts the UTF-8 charset meta tag into the `<head>` section of the 
+        Inserts the UTF-8 charset meta-tag into the `<head>` section of the
         style-modified template (`self.list_style`).
 
-        :return: The template string with charset meta tag added.
+        :return: The template string with a charset meta-tag is added.
         """
         return self.list_style.replace('<head>', '''<head>
         <meta charset="UTF-8">''')

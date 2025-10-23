@@ -155,7 +155,7 @@ class DataInfo(DataLoad):
     @property
     def diet(self) -> str:
         """
-        Returns the diet type of the current animal from the characteristics data.
+        Returns the diet type of the current animal from the characteristics' data.
 
         :return: The animal's diet (string).
         """
