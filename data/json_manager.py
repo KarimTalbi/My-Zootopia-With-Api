@@ -6,16 +6,12 @@ import sys
 FILE = os.path.join("data", "animals_data.json")
 ENCODER = "utf-8"
 
-# Custom Types for clarity
 AnimalData = list[dict[str, str | list[str] | dict[str, str]]]
 SingleAnimal = dict[str, str | list[str] | dict[str, str]]
 
 
-class LoadDatabase:
-    """
-    Loads' Database content
-    Parent class for DatabaseInfo
-    """
+class DataLoad:
+    """Parent of DataInfo: Loads the Data from the JSON"""
 
     def __init__(self, file_path: str = FILE) -> None:
         self.file_path = file_path
@@ -37,11 +33,8 @@ class LoadDatabase:
             return json.load(f)
 
 
-class DatabaseInfo(LoadDatabase):
-    """
-    offers multiple getter methods to get specific information from the database
-    child class of DatabaseFile
-    """
+class DataInfo(DataLoad):
+    """Child of DataLoad: offers multiple getter methods to get specific information from the database"""
 
     def __init__(self, index: int = 0, file_path: str = FILE) -> None:
         super().__init__(file_path)
@@ -49,8 +42,27 @@ class DatabaseInfo(LoadDatabase):
 
     @property
     def count(self) -> int:
-        """returns number of animals"""
+        """returns the number of different animals"""
         return len(self.data)
+
+    @property
+    def skin_types(self) -> list[str]:
+        """returns a list of unique Skin Types"""
+        types = []
+        for animal in self.data:
+            types.append(animal["characteristics"]["skin_type"])
+        return sorted(list(set(types)))
+
+    @property
+    def filter_options(self) -> dict[str, str]:
+        """returns a dictionary """
+        return {f"{i + 1}": skin for i, skin in enumerate(self.skin_types)}
+
+    @property
+    def filter_menu(self) -> str:
+        """returns the menu string"""
+        return "\n".join([f"{key}. {value}" for key, value in self.filter_options.items()] + [
+            f"{len(self.skin_types) + 1}. Exit program"])
 
     @property
     def taxonomy(self) -> dict[str, str]:
