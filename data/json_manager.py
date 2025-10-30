@@ -1,6 +1,7 @@
 """JSON Database management"""
 import os
 import json
+from data.animals_api import ApiLoad
 
 FILE = os.path.join("data", "animals_data.json")
 ENCODER = "utf-8"
@@ -17,23 +18,24 @@ class FileError(Exception):
     pass
 
 
-class DataLoad:
+class DataCRUD:
     """
     Handles the foundational task of loading the entire
     animal database from a specified JSON file into memory.
     """
 
-    def __init__(self, file_path: str = FILE) -> None:
+    def __init__(self, file_path: str = FILE, animal: str = 'fox') -> None:
         """
         Initializes the DataLoad class and attempts to load the JSON data.
 
         :param file_path: The path to the JSON database file. Defaults to FILE.
         """
         self.file_path: str = file_path
+        self.animal_name: str = animal
         self._data: AnimalData | None = None
 
     @property
-    def data(self) -> AnimalData:
+    def load(self) -> AnimalData:
         """
         Reads the animal data from the JSON file specified by `self.file_path`.
 
@@ -57,6 +59,19 @@ class DataLoad:
         except json.JSONDecodeError as e:
             raise FileError(f"Error: File '{self.file_path}' is corrupted (not valid JSON): {e}")
 
+    def save(self, data: AnimalData) -> None:
+        with open(self.file_path, 'w', encoding=ENCODER) as f:
+            json.dump(data, f, indent=4)
+
+        self._data = None
+
+    @property
+    def load_api(self):
+        return ApiLoad(self.animal_name).data_json
+
+    def save_from_api(self):
+        self.save(self.load_api)
+
     def __getitem__(self, index: int) -> SingleAnimal:
         """
         Allows indexing (e.g., data_load_instance[0]) to get a single animal's data.
@@ -64,7 +79,7 @@ class DataLoad:
         :param index: The index of the animal in the list.
         :return: A dictionary containing the data for a single animal.
         """
-        return self.data[index]
+        return self.load[index]
 
     def __len__(self) -> int:
         """
@@ -72,11 +87,10 @@ class DataLoad:
 
         :return: The count of animals in the database (integer).
         """
-        return len(self.data)
+        return len(self.load)
 
 
-
-class DataInfo(DataLoad):
+class DataInfo(DataCRUD):
     """
     Provides multiple getter properties to retrieve specific
     and formatted information for a single, indexed animal record.
@@ -110,8 +124,10 @@ class DataInfo(DataLoad):
         :return: A sorted list of unique skin type strings.
         """
         types = []
-        for animal in self.data:
-            types.append(animal["characteristics"].get("skin_type"))
+        for animal in self.load:
+            skin = animal["characteristics"].get("skin_type")
+            if skin:
+                types.append(skin)
         return sorted(list(set(types)))
 
     @property

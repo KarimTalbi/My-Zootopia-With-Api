@@ -7,21 +7,12 @@ based on the animal data.
 """
 import sys
 from web.html_manager import HtmlData, HtmlLoad
-from data.json_manager import DataInfo, DataLoad
+from data.json_manager import DataInfo, DataCRUD
 
 
 class InputError(Exception):
     """Custom exception raised when user input from the console is invalid."""
     pass
-
-
-class FileMatchError(Exception):
-    """
-    Custom exception raised when the content of the destination HTML file
-    does not match the expected generated content, indicating a save error.
-    """
-    pass
-
 
 def get_filter() -> str:
     """
@@ -60,11 +51,13 @@ def main() -> None:
     initiates the HTML generation using HtmlData, and reports the outcome.
     """
     try:
-        data_json = DataLoad().data
         data_html = HtmlLoad().load_html
     except Exception as e:
         print(e)
         sys.exit(1)
+
+    animal = 'fox'
+    DataCRUD(animal=animal).save_from_api()
 
     print("Welcome to My Animal Repository\n\nFilter options:")
     print(DataInfo().filter_menu)
