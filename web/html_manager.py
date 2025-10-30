@@ -3,18 +3,15 @@ Manages the loading of HTML templates, the filtering and formatting of animal da
 into HTML cards, and the saving and verification of the final web page.
 """
 import os
-import sys
 from data.json_manager import DataInfo
 
 FILE = os.path.join("web", "animals_template.html")
 DEST = os.path.join("web", "animals.html")
 ENCODE = "utf-8"
 
+
 class FileError(Exception):
-    """
-    Custom exception raised when there is an error while loading
-    a file.
-    """
+    """Custom exception raised when there is an error while loading a file."""
     pass
 
 
@@ -56,22 +53,6 @@ class HtmlLoad:
             self._template = f.read()
             return self._template
 
-    @property
-    def load_dest(self) -> str:
-        """
-        Reads and returns the content of the destination HTML file (the generated file).
-
-        This is primarily used to verify that the generated content was saved correctly.
-
-        :raises FileError: If the destination file at `self.dest` does not exist when called.
-        :return: The content of the destination HTML file as a single string.
-        """
-        if not os.path.exists(self.dest):
-            raise FileError(f"fError: The required HTML file was not found at path: {self.file}")
-
-        with open(self.dest, "r", encoding=ENCODE) as f:
-            return f.read()
-
 
 class HtmlSave(HtmlLoad):
     """
@@ -87,7 +68,7 @@ class HtmlSave(HtmlLoad):
         :param dest: The path where the final HTML file will be saved. Defaults to DEST.
         """
         super().__init__(file, dest)
-        self.dest_path = dest
+        self.dest_path: str = dest
 
     def save_html(self, content: str) -> None:
         """
@@ -102,9 +83,7 @@ class HtmlSave(HtmlLoad):
 
 
 class HtmlForm:
-    """
-    Handles the formatting of a single animal's data into a repeatable HTML list item (card) string.
-    """
+    """Handles the formatting of a single animal's data into a repeatable HTML list item (card) string."""
 
     def __init__(self, animal: dict[str, str]):
         """
@@ -112,7 +91,7 @@ class HtmlForm:
 
         :param animal: A dictionary of animal attributes, where the 'Name' key is used for the card title.
         """
-        self.animal = animal
+        self.animal: dict[str, str] = animal
 
     @property
     def top(self) -> str:
@@ -252,24 +231,18 @@ class HtmlData(HtmlSave):
         """
         return self.encoding.replace(f"{" " * 12}__REPLACE_ANIMALS_INFO__", self.animal_data)
 
-    @property
-    def web_generator(self) -> bool:
+    def web_generator_empty(self) -> None:
+        new_html = self.load_html.replace(f"{" " * 12}__REPLACE_ANIMALS_INFO__", f"<h2>The animal doesn't exist.</h2>")
+        self.save_html(new_html)
+
+    def web_generator(self) -> None:
         """
         Executes the full web page generation and verification process:
         1. Generates the final HTML content using `self.replacer`.
         2. Saves the new content to the destination file using `self.save_html()`.
-        3. Loads the saved content from the destination file using `self.load_dest`.
-        4. Compares the generated content with the saved content.
 
         :raises FileError: If an error occurs while attempting to load the saved destination file.
         :return: **True** if the saved content exactly matches the newly generated content, indicating a successful save; otherwise, **False**.
         """
         new_html = self.replacer
         self.save_html(new_html)
-
-        try:
-            dest_content = self.load_dest
-            return new_html == dest_content
-
-        except Exception as e:
-            raise FileError(e)

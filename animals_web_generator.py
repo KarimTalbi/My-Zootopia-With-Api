@@ -52,34 +52,18 @@ def get_filter() -> str:
     return options.get(skin, "")
 
 
-def get_animal() -> str | None:
+def get_animal() -> str:
     while True:
         try:
             animal = input("Enter the name of the animal you would like to search for: ").strip()
 
-            if not ApiLoad(animal).has_info:
-                raise AnimalNotFoundError(f"{animal} not found")
+            if not animal:
+                raise InputError("can't be empty")
 
             return animal
 
         except Exception as e:
             print(e)
-
-            while True:
-                try:
-                    again = input("Would you like to try again (y/n)? ").strip().lower()
-
-                    if again not in {'y', 'n'}:
-                        raise InputError("invalid input\n")
-
-                    if again == 'y':
-                        break
-
-                    if again == 'n':
-                        return None
-
-                except Exception as e:
-                    print(e)
 
 
 def main() -> None:
@@ -89,17 +73,11 @@ def main() -> None:
     It displays the filter menu, retrieves the user's filter choice,
     initiates the HTML generation using HtmlData, and reports the outcome.
     """
-    try:
-        data_html = HtmlLoad().load_html
-
-    except Exception as e:
-        print(e)
-        sys.exit(1)
-
     animal = get_animal()
 
-    if not animal:
-        sys.exit("Bye!")
+    if not ApiLoad(animal).has_info:
+        HtmlData().web_generator_empty()
+        sys.exit("website created")
 
     DataCRUD(animal=animal).save_from_api()
 
