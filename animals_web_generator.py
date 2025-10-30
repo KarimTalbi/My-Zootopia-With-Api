@@ -6,8 +6,8 @@ the final 'animals.html' file using the selected filter (or no filter)
 based on the animal data.
 """
 import sys
-from web.html_manager import HtmlData
-from data.json_manager import DataInfo
+from web.html_manager import HtmlData, HtmlLoad
+from data.json_manager import DataInfo, DataLoad
 
 
 class InputError(Exception):
@@ -40,7 +40,7 @@ def get_filter() -> str:
             skin = input("\nEnter number of the filter you would like to use.\n"
                          "Leave this empty, if you want all animals displayed.\n\nFilter: ").strip()
 
-            if skin == "4":
+            if skin.isdigit() and int(skin) == DataInfo().skin_count + 1:
                 sys.exit("\nGoodbye!")
 
             if not (skin in options or skin == ""):
@@ -59,6 +59,13 @@ def main() -> None:
     It displays the filter menu, retrieves the user's filter choice,
     initiates the HTML generation using HtmlData, and reports the outcome.
     """
+    try:
+        data_json = DataLoad().data
+        data_html = HtmlLoad().load_html
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
     print("Welcome to My Animal Repository\n\nFilter options:")
     print(DataInfo().filter_menu)
 
@@ -68,9 +75,6 @@ def main() -> None:
 
     try:
         success = HtmlData(skin=skin).web_generator
-
-        if not success:
-            raise FileMatchError("Something went wrong while saving")
 
         print("File saved successfully")
 

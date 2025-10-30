@@ -1,13 +1,20 @@
 """JSON Database management"""
 import os
 import json
-import sys
 
 FILE = os.path.join("data", "animals_data.json")
 ENCODER = "utf-8"
 
 AnimalData = list[dict[str, str | list[str] | dict[str, str]]]
 SingleAnimal = dict[str, str | list[str] | dict[str, str]]
+
+
+class FileError(Exception):
+    """
+    Custom exception raised when there is an error while loading
+    a file.
+    """
+    pass
 
 
 class DataLoad:
@@ -22,8 +29,33 @@ class DataLoad:
 
         :param file_path: The path to the JSON database file. Defaults to FILE.
         """
-        self.file_path = file_path
-        self.data = self.get_data
+        self.file_path: str = file_path
+        self._data: AnimalData | None = None
+
+    @property
+    def data(self) -> AnimalData:
+        """
+        Reads the animal data from the JSON file specified by `self.file_path`.
+
+        The data is loaded **lazily**—it's read from the disk only on the first access
+        and then cached in `self._data` for all later calls.
+
+        :raises FileError: If the file does not exist, or if the file content is invalid JSON.
+        :return: A list of dictionaries representing the animal data.
+        """
+        if self._data is not None:
+            return self._data
+
+        if not os.path.exists(self.file_path):
+            raise FileError(f"Error: The required JSON data file was not found at path: {self.file_path}")
+
+        try:
+            with open(self.file_path, "r", encoding=ENCODER) as f:
+                self._data = json.load(f)
+                return self._data
+
+        except json.JSONDecodeError as e:
+            raise FileError(f"Error: File '{self.file_path}' is corrupted (not valid JSON): {e}")
 
     def __getitem__(self, index: int) -> SingleAnimal:
         """
@@ -42,20 +74,6 @@ class DataLoad:
         """
         return len(self.data)
 
-    @property
-    def get_data(self) -> AnimalData:
-        """
-        Reads the animal data from the JSON file specified by `self.file_path`.
-
-        If the file does not exist, the program terminates with an error message.
-
-        :return: A list of dictionaries representing the animal data.
-        """
-        if not os.path.exists(self.file_path):
-            sys.exit(f"File: {self.file_path} could not be loaded. Exiting program...")
-
-        with open(self.file_path, "r", encoding=ENCODER) as f:
-            return json.load(f)
 
 
 class DataInfo(DataLoad):
@@ -93,8 +111,17 @@ class DataInfo(DataLoad):
         """
         types = []
         for animal in self.data:
-            types.append(animal["characteristics"]["skin_type"])
+            types.append(animal["characteristics"].get("skin_type"))
         return sorted(list(set(types)))
+
+    @property
+    def skin_count(self) -> int:
+        """
+        Returns the total number of different skin types in the loaded database.
+
+        :return: The total count of skin types (integer).
+        """
+        return len(self.skin_types)
 
     @property
     def filter_options(self) -> dict[str, str]:
@@ -114,7 +141,7 @@ class DataInfo(DataLoad):
         :return: A multi-line string ready for display as a menu.
         """
         return "\n".join([f"{key}. {value}" for key, value in self.filter_options.items()] + [
-            f"{len(self.skin_types) + 1}. Exit program"])
+            f"{self.skin_count + 1}. Exit program"])
 
     @property
     def taxonomy(self) -> dict[str, str]:
