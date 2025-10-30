@@ -6,17 +6,13 @@ the final 'animals.html' file using the selected filter (or no filter)
 based on the animal data.
 """
 import sys
-from web.html_manager import HtmlData, HtmlLoad
+from web.html_manager import HtmlData
 from data.json_manager import DataInfo, DataCRUD
 from data.animals_api import ApiLoad
 
 
 class InputError(Exception):
     """Custom exception raised when user input from the console is invalid."""
-    pass
-
-
-class AnimalNotFoundError(Exception):
     pass
 
 
@@ -53,6 +49,18 @@ def get_filter() -> str:
 
 
 def get_animal() -> str:
+    """
+    Prompts the user to input the name of an animal and returns it after validation.
+
+    This function continuously prompts the user to enter the name of an animal until it
+    receives valid input. An input is considered valid if it is a non-empty string. If
+    invalid input is provided (e.g., an empty string), an exception will be raised, and the user
+    will be prompted again.
+
+    :raises InputError: If the entered input string is empty.
+
+    :returns str: The valid name of the animal entered by the user.
+    """
     while True:
         try:
             animal = input("Enter the name of the animal you would like to search for: ").strip()
@@ -88,13 +96,9 @@ def main() -> None:
 
     print(f"\nCreating website with filter: {skin}\n" if skin else f"\nCreating website without filter\n")
 
-    try:
-        success = HtmlData(skin=skin).web_generator
+    HtmlData(skin=skin).web_generator()
 
-        print("File saved successfully")
-
-    except Exception as e:
-        print(e)
+    print("File saved")
 
 
 if __name__ == "__main__":

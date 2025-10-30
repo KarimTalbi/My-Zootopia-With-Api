@@ -240,9 +240,6 @@ class HtmlData(HtmlSave):
         Executes the full web page generation and verification process:
         1. Generates the final HTML content using `self.replacer`.
         2. Saves the new content to the destination file using `self.save_html()`.
-
-        :raises FileError: If an error occurs while attempting to load the saved destination file.
-        :return: **True** if the saved content exactly matches the newly generated content, indicating a successful save; otherwise, **False**.
         """
         new_html = self.replacer
         self.save_html(new_html)
