@@ -8,11 +8,17 @@ based on the animal data.
 import sys
 from web.html_manager import HtmlData, HtmlLoad
 from data.json_manager import DataInfo, DataCRUD
+from data.animals_api import ApiLoad
 
 
 class InputError(Exception):
     """Custom exception raised when user input from the console is invalid."""
     pass
+
+
+class AnimalNotFoundError(Exception):
+    pass
+
 
 def get_filter() -> str:
     """
@@ -26,6 +32,7 @@ def get_filter() -> str:
              string if the user chooses to display all animals.
     """
     options = DataInfo().filter_options
+
     while True:
         try:
             skin = input("\nEnter number of the filter you would like to use.\n"
@@ -36,11 +43,43 @@ def get_filter() -> str:
 
             if not (skin in options or skin == ""):
                 raise InputError(f"\n{skin} is not a valid option. Try again.")
+
             break
 
         except Exception as e:
             print(e)
+
     return options.get(skin, "")
+
+
+def get_animal() -> str | None:
+    while True:
+        try:
+            animal = input("Enter the name of the animal you would like to search for: ").strip()
+
+            if not ApiLoad(animal).has_info:
+                raise AnimalNotFoundError(f"{animal} not found")
+
+            return animal
+
+        except Exception as e:
+            print(e)
+
+            while True:
+                try:
+                    again = input("Would you like to try again (y/n)? ").strip().lower()
+
+                    if again not in {'y', 'n'}:
+                        raise InputError("invalid input\n")
+
+                    if again == 'y':
+                        break
+
+                    if again == 'n':
+                        return None
+
+                except Exception as e:
+                    print(e)
 
 
 def main() -> None:
@@ -52,11 +91,16 @@ def main() -> None:
     """
     try:
         data_html = HtmlLoad().load_html
+
     except Exception as e:
         print(e)
         sys.exit(1)
 
-    animal = 'fox'
+    animal = get_animal()
+
+    if not animal:
+        sys.exit("Bye!")
+
     DataCRUD(animal=animal).save_from_api()
 
     print("Welcome to My Animal Repository\n\nFilter options:")

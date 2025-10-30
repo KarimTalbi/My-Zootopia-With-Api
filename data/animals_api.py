@@ -1,3 +1,4 @@
+"""requests animal info from the animal api"""
 from os import getenv
 from dotenv import load_dotenv
 from requests import Response, get
@@ -23,3 +24,7 @@ class ApiLoad:
     @property
     def data_json(self) -> AnimalData:
         return self.data.json()
+
+    @property
+    def has_info(self) -> bool:
+        return len(self.data_json) > 0
